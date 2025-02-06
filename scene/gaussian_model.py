@@ -120,6 +120,15 @@ class GaussianModel:
     def get_opacity(self):
         return self.opacity_activation(self._opacity)
     
+    def set_xyz(self, xyz):
+        self._xyz = xyz
+    
+    def set_scaling(self, scaling):
+        self._scaling = scaling
+    
+    def set_rotation(self, rotation):
+        self._rotation = rotation
+    
     def get_covariance(self, scaling_modifier = 1):
         return self.covariance_activation(self.get_scaling, scaling_modifier, self._rotation)
 
