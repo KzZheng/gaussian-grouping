@@ -79,16 +79,21 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
     colormask_path = os.path.join(model_path, name, "ours_{}".format(iteration), "objects_feature16")
     gt_colormask_path = os.path.join(model_path, name, "ours_{}".format(iteration), "gt_objects_color")
     pred_obj_path = os.path.join(model_path, name, "ours_{}".format(iteration), "objects_pred")
+    depth_path = os.path.join(model_path, name, "ours_{}".format(iteration), "pred_depth")
     makedirs(render_path, exist_ok=True)
     makedirs(gts_path, exist_ok=True)
     makedirs(colormask_path, exist_ok=True)
     makedirs(gt_colormask_path, exist_ok=True)
     makedirs(pred_obj_path, exist_ok=True)
+    makedirs(depth_path, exist_ok=True)
 
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
         results = render(view, gaussians, pipeline, background)
         rendering = results["render"]
         rendering_obj = results["render_object"]
+        depth = results["depth"]
+        depth = (depth - depth.min()) / (depth.max() - depth.min())
+        torchvision.utils.save_image(depth, os.path.join(depth_path, '{0:05d}'.format(idx) + ".png"))
         
         logits = classifier(rendering_obj)
         pred_obj = torch.argmax(logits,dim=0)
