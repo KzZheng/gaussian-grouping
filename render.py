@@ -92,8 +92,12 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
         rendering = results["render"]
         rendering_obj = results["render_object"]
         depth = results["depth"]
-        depth = (depth - depth.min()) / (depth.max() - depth.min())
-        torchvision.utils.save_image(depth, os.path.join(depth_path, '{0:05d}'.format(idx) + ".png"))
+        depth_img = (depth - depth.min()) / (depth.max() - depth.min())
+        torchvision.utils.save_image(depth_img, os.path.join(depth_path, '{0:05d}'.format(idx) + ".png"))
+        # save original depth
+        depth = depth.cpu().numpy()
+        np.save(os.path.join(depth_path, '{0:05d}'.format(idx) + ".npy"), depth)
+
         
         logits = classifier(rendering_obj)
         pred_obj = torch.argmax(logits,dim=0)

@@ -64,10 +64,23 @@ class Camera(nn.Module):
         
         if style_transfer:
             self.transfer_image = self.original_image.clone()
+    
+    def transform(self, rotation, translation):
+        T_mat = torch.eye(4, device=self.data_device)
+        T_mat[:3, :3] = rotation
+        T_mat[:3, 3] = translation
+
+        T_inv = torch.inverse(T_mat)
+
+        new_world_view_transform = T_inv.transpose(0,1) @ self.world_view_transform
+        self.world_view_transform = new_world_view_transform
+
+        self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
+        self.camera_center = self.world_view_transform.inverse()[3, :3]
 
 
 class MiniCam:
-    def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform):
+    def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform=None):
         self.image_width = width
         self.image_height = height    
         self.FoVy = fovy
@@ -75,7 +88,11 @@ class MiniCam:
         self.znear = znear
         self.zfar = zfar
         self.world_view_transform = world_view_transform
-        self.full_proj_transform = full_proj_transform
+        self.projection_matrix = getProjectionMatrix(znear=znear, zfar=zfar, fovX=fovx, fovY=fovy).transpose(0,1).cuda()
+        if full_proj_transform is None:
+            self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
+        else:
+            self.full_proj_transform = full_proj_transform
         view_inv = torch.inverse(self.world_view_transform)
         self.camera_center = view_inv[3][:3]
 

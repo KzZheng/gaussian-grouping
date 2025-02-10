@@ -239,6 +239,11 @@ if __name__ == "__main__":
     args.reg3d_max_points = config.get("reg3d_max_points", 300000)
     args.reg3d_sample_size = config.get("reg3d_sample_size", 1000)
     
+    for key, value in config.items():
+        if hasattr(args, key):
+            setattr(args, key, value)
+        else:
+            print(f"Warning: Ignoring unknown configuration parameter '{key}'")
     print("Optimizing " + args.model_path)
 
     if args.use_wandb:
